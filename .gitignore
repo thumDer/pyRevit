@@ -50,3 +50,4 @@ dist/
 
 # misc
 .idea
+.vscode/
