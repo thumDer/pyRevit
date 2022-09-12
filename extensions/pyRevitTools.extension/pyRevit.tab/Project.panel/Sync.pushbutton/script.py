@@ -1,10 +1,11 @@
 # -*- coding: UTF-8 -*-
 
-#pylint: disable=E0401,invalid-name,missing-docstring,broad-except,bare-except
 import traceback
-from pyrevit import revit, script, forms, EXEC_PARAMS
+from pyrevit import revit, script, forms, EXEC_PARAMS, coreutils
+from pyrevit import DB
+from datetime import timedelta as td
 
-from Autodesk.Revit import DB
+
 from Autodesk.Revit.Exceptions import (
     CentralModelContentionException,
     InternalException
@@ -15,12 +16,13 @@ uidoc = revit.uidoc
 
 logger = script.get_logger()
 output = script.get_output()
+output.close_others()
 
 results = script.get_results()
 
 exceptions = []
 
-
+timer = coreutils.Timer()
 
 class SyncLockCallback(DB.ICentralLockedCallback):
     def ShouldWaitForLockAvailability(self):
@@ -103,7 +105,11 @@ try:
         toast_msg += ' with Compact mode Enabled.'
 
     doc.SynchronizeWithCentral(twc_opts, swc_opts)
+    endtime = str(timer.get_time()).split('.')[0]
+    toast_msg += " in " + endtime + " seconds."
     forms.toast(toast_msg)
+
+
 except CentralModelContentionException:
     sync_failed = True
     logger.warn(
