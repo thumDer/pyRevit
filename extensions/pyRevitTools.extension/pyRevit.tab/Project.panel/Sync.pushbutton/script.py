@@ -1,28 +1,21 @@
 # -*- coding: UTF-8 -*-
 
 import traceback
+import os
+import json
+from json.decoder import JSONDecodeError
+import io
 from pyrevit import revit, script, forms, EXEC_PARAMS, coreutils
+from pyrevit.labs import PyRevit
 from pyrevit import DB
-from datetime import timedelta as td
+from Autodesk.Revit.DB import ExtensibleStorage as ES
+from System import Guid, String
 
 
 from Autodesk.Revit.Exceptions import (
     CentralModelContentionException,
     InternalException
 )
-
-doc = revit.doc
-uidoc = revit.uidoc
-
-logger = script.get_logger()
-output = script.get_output()
-output.close_others()
-
-results = script.get_results()
-
-exceptions = []
-
-timer = coreutils.Timer()
 
 class SyncLockCallback(DB.ICentralLockedCallback):
     def ShouldWaitForLockAvailability(self):
@@ -41,12 +34,119 @@ def set_active_view(view):
         logger.debug('View {} ({}) cannot be activated.'.format(name, view.ViewType))
         return 'INTERNAL / PB: ' + name
 
+
 def sync_failed_popup(sub_msg=None):
     return forms.alert(
         'Synchronization Failed! Please check the error output '
         'window for additional information.',
         sub_msg=sub_msg
     )
+
+
+def is_element_editable(element):
+    """
+    Checks whether the element is editable in the current file using WorksharingUtils.
+
+    Args:
+        element (DB.Element): The element in question.
+
+    Returns:
+        bool: If the element is editable.
+    """
+    e_doc = element.Document
+    editable = True
+
+    # Check Checkout status
+    checkout_status = DB.WorksharingUtils.GetCheckoutStatus(e_doc, element.Id)
+    if checkout_status == DB.CheckoutStatus.OwnedByOtherUser:
+        editable = False
+
+    # Check Model Update status:
+    mu_status = DB.WorksharingUtils.GetModelUpdatesStatus(e_doc, element.Id)
+    if (mu_status == DB.ModelUpdatesStatus.DeletedInCentral or
+            mu_status == DB.ModelUpdatesStatus.UpdatedInCentral):
+        editable = False
+
+    return editable
+
+
+def get_schema():
+    schema_guid = Guid('329ed94b-4bd6-4ca3-abe9-e53c85d08d48')
+    schema = ES.Schema.Lookup(schema_guid)
+    if not schema:
+        builder = ES.SchemaBuilder(schema_guid)
+        builder.SetReadAccessLevel(ES.AccessLevel.Public)
+        builder.SetWriteAccessLevel(ES.AccessLevel.Public)
+        builder.SetVendorId(PyRevit.PyRevitConsts.VendorId)
+        builder.SetSchemaName('pyRevitSync')
+        field_builder = builder.AddSimpleField('data', String)
+        field_builder.SetDocumentation(
+            'Document specific config for pyRevitSync'
+        )
+        schema = builder.Finish()
+    return schema
+
+
+def get_datastorage():
+    schema = get_schema()
+    es_filter = ES.ExtensibleStorageFilter(schema.GUID)
+
+    data_storage_elements = \
+        DB.FilteredElementCollector(doc) \
+            .OfClass(ES.DataStorage) \
+            .WherePasses(es_filter) \
+            .ToElements()
+
+    if not data_storage_elements:
+        with revit.Transaction('Create pyRevitSync config'):
+            ds = ES.DataStorage.Create(doc)
+            ds.Name = 'pyRevitSync'
+            entity = ES.Entity(schema)
+            ds.SetEntity(entity)
+    else:
+        ds = data_storage_elements[0]
+
+    return ds
+
+
+def get_config_field():
+    schema = get_schema()
+    ds = get_datastorage()
+    ds_entity = ds.GetEntity(schema)
+    data_field = schema.GetField('data')
+    return ds_entity, data_field
+
+
+def read_config():
+    entity, data_field = get_config_field()
+    data_str = entity.Get[String](data_field)
+
+    try:
+        config = json.loads(data_str)
+    except JSONDecodeError:
+        config = {}
+
+    return config
+
+
+def write_config(conf):
+    entity, data_field = get_config_field()
+    with revit.Transaction('Update pyRevitSync config'):
+        entity.Set[String](data_field, json.dumps(conf))
+
+
+doc = revit.doc
+uidoc = revit.uidoc
+
+logger = script.get_logger()
+output = script.get_output()
+output.close_others()
+
+results = script.get_results()
+
+exceptions = []
+
+timer = coreutils.Timer()
 
 sync_failed = False
 
