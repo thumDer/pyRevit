@@ -87,6 +87,16 @@ def get_schema():
     return schema
 
 
+def create_datastorage():
+    schema = get_schema()
+    with revit.Transaction('Create pyRevitSync config'):
+        ds_elem = ES.DataStorage.Create(doc)
+        ds_elem.Name = 'pyRevitSync'
+        entity = ES.Entity(schema)
+        ds_elem.SetEntity(entity)
+    return ds_elem
+
+
 def get_datastorage():
     schema = get_schema()
     es_filter = ES.ExtensibleStorageFilter(schema.GUID)
@@ -98,41 +108,36 @@ def get_datastorage():
             .ToElements()
 
     if not data_storage_elements:
-        with revit.Transaction('Create pyRevitSync config'):
-            ds = ES.DataStorage.Create(doc)
-            ds.Name = 'pyRevitSync'
-            entity = ES.Entity(schema)
-            ds.SetEntity(entity)
+        return
     else:
-        ds = data_storage_elements[0]
+        ds_elem = data_storage_elements[0]
+        return ds_elem
 
-    return ds
+def delete_datastorage(data_storage):
+    with revit.Transaction("Remove pyRevitSync config"):
+        doc.Delete(data_storage.Id)
 
 
-def get_config_field():
+
+def read_config(data_storage):
     schema = get_schema()
-    ds = get_datastorage()
-    ds_entity = ds.GetEntity(schema)
-    data_field = schema.GetField('data')
-    return ds_entity, data_field
+    entity = data_storage.GetEntity(schema)
 
-
-def read_config():
-    entity, data_field = get_config_field()
-    data_str = entity.Get[String](data_field)
+    data_str = entity.Get[String](schema.GetField('data'))
 
     try:
-        config = json.loads(data_str)
+        cfg = json.loads(data_str)
     except JSONDecodeError:
-        config = {}
+        cfg = {}
 
-    return config
+    return cfg
 
 
-def write_config(conf):
-    entity, data_field = get_config_field()
+def write_config(data_storage, conf):
+    schema = get_schema()
+    entity = data_storage.GetEntity(schema)
     with revit.Transaction('Update pyRevitSync config'):
-        entity.Set[String](data_field, json.dumps(conf))
+        entity.Set[String](schema.GetField('data'), json.dumps(conf))
 
 
 doc = revit.doc
@@ -141,6 +146,36 @@ uidoc = revit.uidoc
 logger = script.get_logger()
 output = script.get_output()
 output.close_others()
+
+if EXEC_PARAMS.config_mode:
+    ds = get_datastorage()
+    if ds:
+        config = read_config(ds)
+    else:
+        config = {"cap": 0, "current": 0}
+
+    new_cap = forms.ask_for_number_slider(
+        default=config["cap"],
+        min=0,
+        max=10,
+        prompt="Please set the number of syncs after a compact sync will be performed!"
+    )
+    try:
+        new_cap = int(new_cap)
+    except TypeError:
+        script.exit()
+
+    config["cap"] = new_cap
+
+    if ds and new_cap == 0:
+        delete_datastorage(ds)
+        script.exit()
+    if not ds:
+        ds = create_datastorage()
+
+    write_config(ds, config)
+    script.exit()
+
 
 results = script.get_results()
 
@@ -199,10 +234,18 @@ try:
     swc_opts = DB.SynchronizeWithCentralOptions()
     swc_opts.SetRelinquishOptions(DB.RelinquishOptions(True))
     swc_opts.Comment = 'pyRevit Sync!'
+    swc_opts.Compact = False
     toast_msg = 'pyRevit Sync finished in {}'.format(doc.Title)
-    if EXEC_PARAMS.config_mode:
-        swc_opts.Compact = True
-        toast_msg += ' with Compact mode Enabled.'
+
+    ds = get_datastorage()
+    if ds and is_element_editable(ds):
+        config = read_config(ds)
+        if config["current"] < config["cap"]:
+            config["current"] += 1
+        else:
+            config["current"] = 0
+            swc_opts.Compact = True
+        write_config(ds, config)
 
     doc.SynchronizeWithCentral(twc_opts, swc_opts)
     endtime = str(timer.get_time()).split('.')[0]
