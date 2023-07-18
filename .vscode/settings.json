@@ -1,15 +1,17 @@
 {
-    "python.linting.pylintEnabled": false,
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": true,
+    "python.linting.pylintPath": "C:\\Python27\\Scripts\\pylint.exe",
     "python.linting.pylintArgs": ["--max-line-length=80"],
     "python.linting.pylintUseMinimalCheckers": false,
     "python.linting.pycodestyleEnabled": false,
-    "python.linting.flake8Enabled": true,
+    "python.linting.flake8Enabled": false,
     "python.linting.pylamaEnabled": false,
     "python.linting.mypyEnabled": false,
     "python.jediEnabled": true,
     "restructuredtext.confPath": "${workspaceFolder}/docs",
     "python.formatting.provider": "autopep8",
-    "python.languageServer": "Jedi",
+    "python.languageServer": "Default",
     "python.formatting.blackArgs": [
         "--line-length=80"
     ],
@@ -29,6 +31,21 @@
         "**/__pycache__": true,
         "**/Prerequisites": true,
     },
-    "python.pythonPath": "C:\\Users\\ehsan\\.virtualenvs\\pyrevit-dev-2PO7Kqjk\\Scripts\\python.exe",
-    "python.linting.enabled": true
+    "python.autoComplete.extraPaths": [
+        // got new stubs from: https://github.com/BIMOpenGroup/RevitAPIStubs
+        "C:\\Users\\tamas.deri\\Documents\\repos\\pynextools.extension\\etc\\revit-api-stubs\\common",
+        "C:\\Users\\tamas.deri\\Documents\\repos\\pynextools.extension\\etc\\revit-api-stubs\\revit\\2022",
+        "${workspaceFolder}\\pyrevitlib",
+        "${workspaceFolder}\\site-packages",
+        "${workspaceFolder}\\site-packages\\xlsxwriter",
+    ],
+    "python.analysis.completeFunctionParens": true,
+    "python.analysis.extraPaths": [
+        "C:\\Python27\\lib",
+        "C:\\Users\\tamas.deri\\Documents\\repos\\pynextools.extension\\etc\\revit-api-stubs\\common",
+        "C:\\Users\\tamas.deri\\Documents\\repos\\pynextools.extension\\etc\\revit-api-stubs\\revit\\2022",
+        "${workspaceFolder}\\pyrevitlib",
+        "${workspaceFolder}\\site-packages",
+        "${workspaceFolder}\\site-packages\\xlsxwriter",
+    ],
 }
