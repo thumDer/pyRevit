@@ -1,5 +1,5 @@
 from __future__ import print_function
-from pyrevit import script, revit, DB, forms, EXEC_PARAMS
+from pyrevit import script, revit, DB, forms
 from Autodesk.Revit.Exceptions import InvalidOperationException
 
 doc = revit.doc
@@ -35,7 +35,8 @@ def merge_solids(solids):
                     DB.BooleanOperationsType.Union
                 )
             except InvalidOperationException:
-                ref = solid.Faces[0].Reference.ConvertToStableRepresentation(doc)
+                ref = \
+                    solid.Faces[0].Reference.ConvertToStableRepresentation(doc)
                 uid = ref.split(':')[0]
                 e = doc.GetElement(uid)
                 logger.error(
@@ -45,6 +46,7 @@ def merge_solids(solids):
                     )
                 )
     return union
+
 
 cfg = script.get_config()
 logger.debug('loaded config {}'.format(cfg))
@@ -66,20 +68,10 @@ try:
 except AttributeError:
     logger.debug('no line style in config')
     line_style = None
-if EXEC_PARAMS.config_mode:
-    line_style = forms.SelectFromList.show(
-        line_styles,
-        name_attr='Name',
-        title='Select Line Style to be used'
-    )
-    if line_style:
-        cfg.line_style = line_style.Name
-        script.save_config()
-        logger.debug('saved selected line style to config')
 
 selection = revit.get_selection()
 if not selection:
-    forms.alert('You must select one element.', exitscript=True)
+    forms.alert('You must select at least one element.', exitscript=True)
 logger.debug('selection: {}'.format(selection))
 
 extracted_solids = []
@@ -138,5 +130,5 @@ with revit.Transaction('Get Centroid'):
     )
 
     if line_style:
-        for l in [l1, l2, l3]:
-            l.LineStyle = line_style
+        for line in [l1, l2, l3]:
+            line.LineStyle = line_style
