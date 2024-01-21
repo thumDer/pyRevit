@@ -6,7 +6,7 @@
 [![GitHub forks](https://img.shields.io/github/forks/eirannejad/pyRevit.svg?style=for-the-badge)](https://github.com/eirannejad/pyRevit/network)
 [![GitHub stars](https://img.shields.io/github/stars/eirannejad/pyRevit.svg?style=for-the-badge&colorB=red)](https://github.com/eirannejad/pyRevit/stargazers)
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg?style=for-the-badge)](http://www.gnu.org/licenses/gpl-3.0)
-[![madewithloveinportland](https://img.shields.io/badge/%3C%2F%3E%20with%20%3C3-Portland%2C%20OR-green.svg?style=for-the-badge)](https://en.wikipedia.org/wiki/Portland,_Oregon)
+[![made with love in portland](https://img.shields.io/badge/%3C%2F%3E%20with%20%3C3-Portland%2C%20OR-green.svg?style=for-the-badge)](https://en.wikipedia.org/wiki/Portland,_Oregon)
 
 &nbsp;
 
@@ -46,9 +46,14 @@ pyRevit helps you quickly sketch out your automation and addon ideas, in whichev
 
 [Create Your First Command](https://www.notion.so/Create-Your-First-Command-2509b43e28bd498fba937f5c1be7f485)
 
+**↓** Read the pyRevit API reference to know everything about pyRevit available modules, functions, ...
+
+[pyRevit API Reference](https://ein.sh/pyRevit/reference/pyrevit/)
+
 **↓** Read the docs to know everything about pyRevit scripts, extensions, ...
 
 [Developer Docs](https://www.notion.so/Developer-Docs-2c88f3ecccde422d9504e20b6b9e04f8)
+
 
 **↓** pyRevit has a powerful command line utility
 
@@ -120,12 +125,11 @@ Check the list of [Currently Open](https://github.com/eirannejad/pyRevit/issues)
 
 ## Share Your Coins
 
-**↓** Help making pyRevit financially stronger 
+**↓** Help making pyRevit financially stronger
 
 [Support on Patreon](https://www.notion.so/Support-on-Patreon-cdf92ba547154f7a85d32b526dc5e59b)
 
 [Supporters](https://www.notion.so/Supporters-4f3350243ba24dcd8228df6262723629)
-
 
 # Contributors
 
@@ -139,6 +143,6 @@ Made with [contrib.rocks](https://contrib.rocks)
 
 **</>** with 🖤 in [Portland](https://en.m.wikipedia.org/wiki/Portland,_Oregon), Oregon
 
-Copyright © 2014-2023 by Ehsan Iran-Nejad (pyrevitlabs.io) - All Rights Reserved
+Copyright © 2014-2024 by Ehsan Iran-Nejad (pyrevitlabs.io) - All Rights Reserved
 
 No part of this publication may be reproduced, distributed, or transmitted in any form or by any means, including photocopying, recording, or other electronic or mechanical methods, without the prior written permission of the publisher.
